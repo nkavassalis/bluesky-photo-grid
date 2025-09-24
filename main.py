@@ -85,7 +85,7 @@ def extract_images(posts, handle):
                 if src and uri:
                     rkey = uri.split("/")[-1]
                     link = f"https://bsky.app/profile/{handle}/post/{rkey}"
-                    images.append({"src": src, "link": link, "description": description, "date": created_at})
+                    images.append({"id": rkey, "src": src, "link": link, "description": description, "date": created_at})
     return images
 
 
