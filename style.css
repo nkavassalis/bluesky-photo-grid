@@ -22,12 +22,12 @@ h1 { padding: 1rem; }
   border-radius: 4px;
   display: block;
 }
-@media (max-width: 1280px) {
+@media (max-width: 1024px) {
   .grid {
     column-count: 2;
   }
 }
-@media (max-width: 768px) {
+@media (max-width: 375px) {
   .grid {
     column-count: 1;
   }
@@ -39,12 +39,12 @@ h1 { padding: 1rem; }
   justify-content: space-between;
   align-items: center;
 }
-@media (max-width: 1280px) {
+@media (max-width: 1024px) {
   .subtitle {
     width: 70%;
   }
 }
-@media (max-width: 768px) {
+@media (max-width: 375px) {
   .subtitle {
     width: 90%;
     flex-direction: column;
