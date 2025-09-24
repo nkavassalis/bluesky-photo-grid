@@ -22,12 +22,34 @@ h1 { padding: 1rem; }
   border-radius: 4px;
   display: block;
 }
+@media (max-width: 1280px) {
+  .grid {
+    column-count: 2;
+  }
+}
+@media (max-width: 768px) {
+  .grid {
+    column-count: 1;
+  }
+}
 .subtitle {
   width: 30%;
   margin: 1rem auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+@media (max-width: 1280px) {
+  .subtitle {
+    width: 70%;
+  }
+}
+@media (max-width: 768px) {
+  .subtitle {
+    width: 90%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
 .subtitle a, .subtitle a:visited {
   color: white;
@@ -64,7 +86,7 @@ h1 { padding: 1rem; }
   display: block;
   margin-top: 0.75rem;
 }
-.lg-sub-html .post-info a, 
+.lg-sub-html .post-info a,
 .lg-sub-html .post-info a:visited {
   color: #aaa;
   text-decoration: underline;
