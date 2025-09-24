@@ -5,6 +5,7 @@ bluesky:
 output:
   directory: "output_site"
   posts_per_chunk: 25
+  highres_tile: false 
 
 cdn:
   type: local  # options: local, s3, s3_cloudfront, github_pages

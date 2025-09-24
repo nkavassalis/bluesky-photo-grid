@@ -21,6 +21,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.2/lightgallery.min.js"></script>
   <script>
+    const useHighResTile = {{ 'true' if config.output.highres_tile else 'false' }};
+
     const gallery = document.getElementById('lightgallery');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
@@ -69,7 +71,7 @@
             <span class='post-info'>Posted on ${img.date}
             <a href='${img.link}' target='_blank'>View it on Bluesky</a></span>
           </div>`;
-        anchor.innerHTML = `<img src="${img.src}" loading="lazy">`;
+        anchor.innerHTML = `<img src="${useHighResTile ? img.src : img.thumb}" loading="lazy">`;
         gallery.appendChild(anchor);
       });
 
