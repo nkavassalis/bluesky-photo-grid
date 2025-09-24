@@ -1,0 +1,110 @@
+body {
+  font-family: sans-serif;
+  margin: 0;
+  background: #111;
+  color: #eee;
+  text-align: center;
+}
+h1 { padding: 1rem; }
+.grid {
+  column-count: 4;
+  column-gap: 10px;
+}
+.grid a {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 10px;
+  break-inside: avoid;
+}
+.grid img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+}
+.subtitle {
+  width: 30%;
+  margin: 1rem auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.subtitle a, .subtitle a:visited {
+  color: white;
+  text-decoration: none;
+}
+.modern-hr {
+  width: 40%;
+  margin: 2rem auto;
+  border: none;
+  height: 2px;
+  background-image: linear-gradient(to right, transparent, #555, transparent);
+  border-radius: 1px;
+}
+.footer {
+  margin: 1rem auto;
+  align-items: center;
+}
+.footer a, .footer a:visited {
+  color: white;
+  text-decoration: none;
+}
+.lg-sub-html {
+  font-size: 18px;
+  color: #fff;
+  text-align: center; /* restore center alignment */
+}
+.lg-sub-html .description {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+.lg-sub-html .post-info {
+  font-size: 16px;
+  color: #aaa;
+  display: block;
+  margin-top: 0.75rem;
+}
+.lg-sub-html .post-info a, 
+.lg-sub-html .post-info a:visited {
+  color: #aaa;
+  text-decoration: underline;
+  margin-left: 15px;
+}
+.pagination {
+margin: 30px auto;
+text-align: center;
+display: inline-flex;
+gap: 10px;
+align-items: center;
+justify-content: center;
+background: rgba(255, 255, 255, 0.05);
+border-radius: 8px;
+padding: 10px 20px;
+box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+.pagination button {
+padding: 8px 16px;
+background: linear-gradient(to bottom, #444, #333);
+border: none;
+color: #fff;
+border-radius: 6px;
+cursor: pointer;
+transition: background 0.2s ease, transform 0.1s ease;
+box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+font-size: 16px;
+}
+.pagination button:hover {
+background: linear-gradient(to bottom, #555, #444);
+transform: translateY(-1px);
+}
+.pagination button:disabled {
+opacity: 0.4;
+cursor: default;
+transform: none;
+box-shadow: none;
+}
+.pagination #page-indicator {
+font-size: 16px;
+color: #ddd;
+user-select: none;
+}

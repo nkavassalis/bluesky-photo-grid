@@ -1,0 +1,31 @@
+bluesky:
+  handle: "your-handle.bsky.social"
+  app_password: "an app specific password, not your password"
+
+output:
+  directory: "output_site"
+  posts_per_chunk: 25
+
+cdn:
+  type: local  # options: local, s3, s3_cloudfront, github_pages
+
+aws:
+  s3_bucket: "your-bucket"
+  cloudfront_dist_id: "your-dist-id"
+
+local:
+  directory: "./public"
+
+github:
+  repo_path: "/path/to/local/repo/below"
+  repo_url: "git@github.com:<username>/<repo>.git"
+
+website:
+  title: "your title goes here"
+  subtitle: |
+    a sub title?
+    some links?
+    a logo?
+    have fun with it!
+  footer: |
+    (c) You <script>document.write(new Date().getFullYear())</script>

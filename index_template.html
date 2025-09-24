@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ WEBSITE_TITLE }}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.2/css/lightgallery.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>{{ WEBSITE_TITLE }}</h1>
+  <h3 class="subtitle">{{ WEBSITE_SUBTITLE }}</h3>
+  <hr class="modern-hr">
+
+  <div id="lightgallery" class="grid"></div>
+
+  <div class="pagination">
+    <button id="prev-btn">Previous</button>
+    <span id="page-indicator"></span>
+    <button id="next-btn">Next</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.2/lightgallery.min.js"></script>
+  <script>
+    const gallery = document.getElementById('lightgallery');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const pageIndicator = document.getElementById('page-indicator');
+
+    let lg = null;
+    let images = [];
+    const pageSize = 25;
+
+    function getPageFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const page = parseInt(params.get('page'));
+      return (!isNaN(page) && page > 0) ? page : 1;
+    }
+
+    function setPageInURL(page) {
+      const params = new URLSearchParams(window.location.search);
+      params.set('page', page);
+      window.history.pushState({page}, '', '?' + params.toString());
+    }
+
+    async function loadAllImages() {
+      let page = 1;
+      while (true) {
+        const response = await fetch(`data/images_page_${page}.json`);
+        if (!response.ok) break;
+        const data = await response.json();
+        images = images.concat(data);
+        page++;
+      }
+      renderPage(getPageFromURL());
+    }
+
+    function renderPage(page, updateHistory = true) {
+      gallery.innerHTML = '';
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const pageImages = images.slice(start, end);
+
+      pageImages.forEach(img => {
+        const anchor = document.createElement('a');
+        anchor.href = img.src;
+        anchor.dataset.subHtml = `
+          <div class='lg-sub-html'>
+            <span class='description'>${img.description}</span><br>
+            <span class='post-info'>Posted on ${img.date}
+            <a href='${img.link}' target='_blank'>View it on Bluesky</a></span>
+          </div>`;
+        anchor.innerHTML = `<img src="${img.src}" loading="lazy">`;
+        gallery.appendChild(anchor);
+      });
+
+      if (lg) lg.destroy();
+      lg = lightGallery(gallery, { selector: 'a', download: false, counter: false });
+
+      updatePagination(page);
+      window.scrollTo(0, 0);
+
+      if (updateHistory) setPageInURL(page);
+    }
+
+    function updatePagination(currentPage) {
+      const totalPages = Math.ceil(images.length / pageSize);
+      pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+      prevBtn.disabled = currentPage === 1;
+      nextBtn.disabled = currentPage === totalPages;
+    }
+
+    prevBtn.onclick = () => {
+      const page = getPageFromURL();
+      if (page > 1) renderPage(page - 1);
+    };
+
+    nextBtn.onclick = () => {
+      const page = getPageFromURL();
+      if (page < Math.ceil(images.length / pageSize)) renderPage(page + 1);
+    };
+
+    window.onpopstate = (event) => {
+      const page = event.state ? event.state.page : getPageFromURL();
+      renderPage(page, false);
+    };
+
+    loadAllImages();
+  </script>
+
+  <hr class="modern-hr">
+  <h3 class="footer">{{ WEBSITE_FOOTER }}</h3>
+  <h3 class="footer">
+    <a href="https://github.com/nkavassalis/bluesky-photo-grid">Powered by Bluesky Photo Grid</a>
+  </h3>
+</body>
+</html>
+
