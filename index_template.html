@@ -69,7 +69,7 @@
             <span class='post-info'>Posted on ${img.date}
             <a href='${img.link}' target='_blank'>View it on Bluesky</a></span>
           </div>`;
-        anchor.innerHTML = `<img src="${img.src}" loading="lazy">`;
+        anchor.innerHTML = `<img src="${useHighResTile ? img.src : img.thumb}" loading="lazy">`;
         gallery.appendChild(anchor);
       });
 

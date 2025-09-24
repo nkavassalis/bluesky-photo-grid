@@ -32,6 +32,9 @@ def validate_config(config):
     if missing_keys:
         raise KeyError("Missing required config keys: " + ", ".join(missing_keys))
 
+    if "highres_tile" not in config["output"]:
+        config["output"]["highres_tile"] = True
+
 
 def get_session(handle, password):
     url = "https://bsky.social/xrpc/com.atproto.server.createSession"
@@ -81,11 +84,12 @@ def extract_images(posts, handle):
         created_at = post.get("record", {}).get("createdAt", "")[:10]
         if "images" in embed:
             for img in embed["images"]:
-                src = img.get("fullsize") or img.get("thumb")
+                src = img.get("fullsize")
+                thumb = img.get("thumb") 
                 if src and uri:
                     rkey = uri.split("/")[-1]
                     link = f"https://bsky.app/profile/{handle}/post/{rkey}"
-                    images.append({"id": rkey, "src": src, "link": link, "description": description, "date": created_at})
+                    images.append({"id": rkey, "src": src, "thumb": thumb, "link": link, "description": description, "date": created_at})
     return images
 
 
@@ -100,13 +104,14 @@ def save_images_json(images, output_dir, chunk_size):
             json.dump(chunk, f, indent=2)
 
 
-def render_template(output_dir, website_title, website_subtitle, website_footer):
+def render_template(output_dir, config):
     env = Environment(loader=FileSystemLoader(Path(__file__).parent))
     template = env.get_template("index_template.html")
     html_output = template.render(
-        WEBSITE_TITLE=website_title,
-        WEBSITE_SUBTITLE=website_subtitle,
-        WEBSITE_FOOTER=website_footer
+        WEBSITE_TITLE=config["website"]["title"],
+        WEBSITE_SUBTITLE=config["website"]["subtitle"],
+        WEBSITE_FOOTER=config["website"]["footer"],
+        config=config
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -175,7 +180,7 @@ if __name__ == "__main__":
     posts = fetch_all_posts(config["bluesky"]["handle"], jwt)
     images = extract_images(posts, config["bluesky"]["handle"])
     save_images_json(images, output_dir, config["output"]["posts_per_chunk"])
-    render_template(output_dir, config["website"]["title"], config["website"]["subtitle"], config["website"]["footer"])
+    render_template(output_dir, config)
     copy_style_css(output_dir)
     sync_files(output_dir, hashes_file, config["cdn"], config)
 
