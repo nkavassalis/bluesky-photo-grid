@@ -1,6 +1,6 @@
 # Bluesky Photo Grid 
 
-Create a static website photo gallery from a Bluesky account using S3 (and optionally CloudFront), GitHub Pages, or any CDN you can rsync from a local directory to. Cron it to run as often as you want (wont hit S3/CF unless your Bluesky changes) and customize the look and feel as desired!
+Create a static website photo gallery from a Bluesky account using S3 (and optionally CloudFront), GitHub Pages, or any CDN you can rsync from a local directory to. Cron it to run as often as you want (it wont actually update files unless your Bluesky changes) and customize the look and feel as desired!
 
 Uses [LightGallery](https://github.com/sachinchoolur/lightGallery) for the UI.
 
