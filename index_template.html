@@ -21,6 +21,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.2/lightgallery.min.js"></script>
   <script>
+    const useHighResTile = {{ 'true' if config.output.highres_tile else 'false' }};
+
     const gallery = document.getElementById('lightgallery');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
