@@ -33,7 +33,7 @@ def validate_config(config):
         raise KeyError("Missing required config keys: " + ", ".join(missing_keys))
 
     if "highres_tile" not in config["output"]:
-        config["output"]["highres_tile"] = True
+        config["output"]["highres_tile"] = False 
 
 
 def get_session(handle, password):
