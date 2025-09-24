@@ -106,18 +106,19 @@
 
     loadAllImages();
 
-  document.addEventListener('keydown', (e) => {
-    const activeEl = document.activeElement.tagName.toLowerCase();
-    if (activeEl === 'input' || activeEl === 'textarea') return;
+    document.addEventListener('keydown', (e) => {
+      const activeEl = document.activeElement.tagName.toLowerCase();
+      if (activeEl === 'input' || activeEl === 'textarea') return;
 
-    if (!lg || !lg.isOpen) {
+      if (lg && lg.lgOpened) return;
+
       if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
         prevBtn.click();
       } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
         nextBtn.click();
       }
-    }
-  });
+    });
+
   </script>
 
   <hr class="modern-hr">
