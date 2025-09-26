@@ -48,6 +48,7 @@ bluesky:
 output:
   directory: "output_site"
   posts_per_chunk: 25
+  host_images: false
 
 cdn:
   type: s3
@@ -64,6 +65,7 @@ website:
     <a href='mailto:nick@baka.jp'>email</a>
   footer: |
     (c) Nick Kavassalis <script>document.write(new Date().getFullYear())</script>
+  base_url: https://photog.jp
 ```
 
 

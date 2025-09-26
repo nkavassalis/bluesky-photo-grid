@@ -18,6 +18,11 @@ Uses [LightGallery](https://github.com/sachinchoolur/lightGallery) for the UI.
 
 ---
 
+## Configuration 
+
+
+---
+
 ## Live Demo
 
 Check out a live demo here:
