@@ -142,26 +142,32 @@ def save_hashes(hashes, hashes_file):
 def generate_rss_feed(images, output_dir, config, feed_size=25):
     rss_items = []
     feed_images = images[:feed_size]
+    base_url = config["website"].get("link", "https://example.com")
+    feed_url = f"{base_url}/feed.xml"
 
     for img in feed_images:
+        guid_url = img['link']
+        description_text = escape(img['description'])
+
         rss_items.append(f"""
         <item>
-            <title>{escape(img['description'][:50])}</title>
-            <link>{img['link']}</link>
-            <description><![CDATA[<img src="{img['src']}" alt="{escape(img['description'])}" />]]></description>
+            <title>{description_text[:50]}</title>
+            <link>{guid_url}</link>
+            <description>{description_text}</description>
             <pubDate>{datetime.datetime.strptime(img['date'], '%Y-%m-%d').strftime('%a, %d %b %Y 00:00:00 GMT')}</pubDate>
-            <guid>{img['id']}</guid>
+            <guid>{guid_url}</guid>
         </item>""")
 
     rss_feed = f"""<?xml version="1.0" encoding="UTF-8" ?>
-    <rss version="2.0">
-      <channel>
-        <title>{escape(config["website"]["title"])}</title>
-        <link>{config.get("website", {}).get("link", "https://example.com")}</link>
-        <description>{escape(config["website"]["subtitle"])}</description>
-        {''.join(rss_items)}
-      </channel>
-    </rss>"""
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{escape(config["website"]["title"])}</title>
+    <link>{base_url}</link>
+    <atom:link href="{feed_url}" rel="self" type="application/rss+xml" />
+    <description>{escape(config["website"]["subtitle"])}</description>
+    {''.join(rss_items)}
+  </channel>
+</rss>"""
 
     (output_dir / "feed.xml").write_text(rss_feed, encoding="utf-8")
 
