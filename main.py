@@ -164,7 +164,6 @@ def generate_rss_feed(images, output_dir, config, feed_size=25):
     <title>{escape(config["website"]["title"])}</title>
     <link>{base_url}</link>
     <atom:link href="{feed_url}" rel="self" type="application/rss+xml" />
-    <description>{escape(config["website"]["subtitle"])}</description>
     {''.join(rss_items)}
   </channel>
 </rss>"""
