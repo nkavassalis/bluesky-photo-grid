@@ -15,7 +15,7 @@ def validate_config(config):
     required_keys = {
         "bluesky": ["handle", "app_password"],
         "output": ["directory", "posts_per_chunk"],
-        "website": ["title", "subtitle", "footer"],
+        "website": ["title", "subtitle", "footer", "base_url"],
         "cdn": ["type"]
     }
 
@@ -142,7 +142,7 @@ def save_hashes(hashes, hashes_file):
 def generate_rss_feed(images, output_dir, config, feed_size=25):
     rss_items = []
     feed_images = images[:feed_size]
-    base_url = config["website"].get("base_url", "https://example.com")
+    base_url = config["website"].get("base_url")
     feed_url = f"{base_url}/feed.xml"
 
     for img in feed_images:
