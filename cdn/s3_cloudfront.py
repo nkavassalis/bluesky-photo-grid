@@ -5,24 +5,20 @@ class S3CloudFrontCDN(CDN):
     def upload_files(self, files_to_upload, output_dir):
         bucket = self.config["aws"]["s3_bucket"]
 
-        # Create a temporary include file for specific paths
-        include_file = output_dir / ".s3_include_paths.txt"
-        include_file.write_text("\n".join(files_to_upload))
-
-        # Run aws s3 sync with --include and --exclude to handle specific files efficiently
-        subprocess.run([
+        cmd = [
             "aws", "s3", "sync",
             str(output_dir),
             f"s3://{bucket}/",
             "--acl", "public-read",
             "--exclude", "*",
-            "--include-from", str(include_file),
             "--no-progress",
-            "--delete",
-            "--only-show-errors",
-        ], check=True)
+            "--only-show-errors"
+        ]
 
-        include_file.unlink(missing_ok=True)
+        for file_path in files_to_upload:
+            cmd.extend(["--include", file_path])
+
+        subprocess.run(cmd, check=True)
 
         print(f"Uploaded {len(files_to_upload)} files to S3 bucket: {bucket}.")
 
@@ -33,4 +29,3 @@ class S3CloudFrontCDN(CDN):
         ], check=True)
 
         print(f"Uploaded {len(files_to_upload)} files and invalidated CloudFront ({dist_id}).")
-
