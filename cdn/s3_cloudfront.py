@@ -4,6 +4,7 @@ from .base import CDN
 class S3CloudFrontCDN(CDN):
     def upload_files(self, files_to_upload, output_dir):
         bucket = self.config["aws"]["s3_bucket"]
+        dist_id = self.config["aws"]["cloudfront_dist_id"]
 
         cmd = [
             "aws", "s3", "sync",
