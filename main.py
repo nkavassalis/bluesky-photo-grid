@@ -79,6 +79,8 @@ def fetch_all_posts(handle, jwt, limit=100):
     return all_posts
 
 def download_image(url, save_path):
+    if save_path.exists():
+        return
     resp = requests.get(url, stream=True, timeout=20)
     resp.raise_for_status()
     save_path.parent.mkdir(parents=True, exist_ok=True)
