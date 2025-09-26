@@ -4,11 +4,12 @@ import requests
 import hashlib
 import yaml
 import json
+import datetime
 from pathlib import Path
 from urllib.parse import quote
 from cdn import get_cdn
 from jinja2 import Environment, FileSystemLoader
-
+from xml.sax.saxutils import escape
 
 def validate_config(config):
     required_keys = {
@@ -138,6 +139,31 @@ def load_hashes(hashes_file):
 def save_hashes(hashes, hashes_file):
     hashes_file.write_text(json.dumps(hashes, indent=2))
 
+def generate_rss_feed(images, output_dir, config, feed_size=25):
+    rss_items = []
+    feed_images = images[:feed_size]
+
+    for img in feed_images:
+        rss_items.append(f"""
+        <item>
+            <title>{escape(img['description'][:50])}</title>
+            <link>{img['link']}</link>
+            <description><![CDATA[<img src="{img['src']}" alt="{escape(img['description'])}" />]]></description>
+            <pubDate>{datetime.datetime.strptime(img['date'], '%Y-%m-%d').strftime('%a, %d %b %Y 00:00:00 GMT')}</pubDate>
+            <guid>{img['id']}</guid>
+        </item>""")
+
+    rss_feed = f"""<?xml version="1.0" encoding="UTF-8" ?>
+    <rss version="2.0">
+      <channel>
+        <title>{escape(config["website"]["title"])}</title>
+        <link>{config.get("website", {}).get("link", "https://example.com")}</link>
+        <description>{escape(config["website"]["subtitle"])}</description>
+        {''.join(rss_items)}
+      </channel>
+    </rss>"""
+
+    (output_dir / "feed.xml").write_text(rss_feed, encoding="utf-8")
 
 def sync_files(output_dir, hashes_file, cdn_config, config):
     cdn = get_cdn(cdn_config["type"], config)
@@ -182,5 +208,6 @@ if __name__ == "__main__":
     save_images_json(images, output_dir, config["output"]["posts_per_chunk"])
     render_template(output_dir, config)
     copy_style_css(output_dir)
+    generate_rss_feed(images, output_dir, config)  
     sync_files(output_dir, hashes_file, config["cdn"], config)
 

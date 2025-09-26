@@ -30,3 +30,4 @@ website:
     have fun with it!
   footer: |
     (c) You <script>document.write(new Date().getFullYear())</script>
+  link: "https://your-website-url.com"
