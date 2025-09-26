@@ -4,17 +4,18 @@ import requests
 import hashlib
 import yaml
 import json
+import datetime
 from pathlib import Path
 from urllib.parse import quote
 from cdn import get_cdn
 from jinja2 import Environment, FileSystemLoader
-
+from xml.sax.saxutils import escape
 
 def validate_config(config):
     required_keys = {
         "bluesky": ["handle", "app_password"],
         "output": ["directory", "posts_per_chunk"],
-        "website": ["title", "subtitle", "footer"],
+        "website": ["title", "subtitle", "footer", "base_url"],
         "cdn": ["type"]
     }
 
@@ -33,7 +34,11 @@ def validate_config(config):
         raise KeyError("Missing required config keys: " + ", ".join(missing_keys))
 
     if "highres_tile" not in config["output"]:
-        config["output"]["highres_tile"] = False 
+        config["output"]["highres_tile"] = False
+
+    if "host_images" not in config["output"]:
+        config["output"]["host_images"] = False
+ 
 
 
 def get_session(handle, password):
@@ -73,8 +78,18 @@ def fetch_all_posts(handle, jwt, limit=100):
 
     return all_posts
 
+def download_image(url, save_path):
+    if save_path.exists():
+        return
+    resp = requests.get(url, stream=True, timeout=20)
+    resp.raise_for_status()
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(save_path, 'wb') as f:
+        for chunk in resp.iter_content(8192):
+            f.write(chunk)
 
-def extract_images(posts, handle):
+
+def extract_images(posts, handle, output_dir, host_images=False):
     images = []
     for item in posts:
         post = item.get("post", {})
@@ -89,7 +104,24 @@ def extract_images(posts, handle):
                 if src and uri:
                     rkey = uri.split("/")[-1]
                     link = f"https://bsky.app/profile/{handle}/post/{rkey}"
-                    images.append({"id": rkey, "src": src, "thumb": thumb, "link": link, "description": description, "date": created_at})
+
+                    if host_images:
+                        img_path = output_dir / "hosted_images"
+                        src_filename = img_path / f"{rkey}_full.jpg"
+                        thumb_filename = img_path / f"{rkey}_thumb.jpg"
+                        download_image(src, src_filename)
+                        download_image(thumb, thumb_filename)
+                        src = str(src_filename.relative_to(output_dir))
+                        thumb = str(thumb_filename.relative_to(output_dir))
+
+                    images.append({
+                        "id": rkey, 
+                        "src": src, 
+                        "thumb": thumb, 
+                        "link": link, 
+                        "description": description, 
+                        "date": created_at
+                    })
     return images
 
 
@@ -138,6 +170,37 @@ def load_hashes(hashes_file):
 def save_hashes(hashes, hashes_file):
     hashes_file.write_text(json.dumps(hashes, indent=2))
 
+def generate_rss_feed(images, output_dir, config, feed_size=25):
+    rss_items = []
+    feed_images = images[:feed_size]
+    base_url = config["website"].get("base_url")
+    feed_url = f"{base_url}/feed.xml"
+
+    for img in feed_images:
+        guid_url = img['link']
+        description_text = escape(img['description'])
+
+        rss_items.append(f"""
+        <item>
+            <title>{description_text[:50]}</title>
+            <link>{guid_url}</link>
+            <description>{description_text}</description>
+            <pubDate>{datetime.datetime.strptime(img['date'], '%Y-%m-%d').strftime('%a, %d %b %Y 00:00:00 GMT')}</pubDate>
+            <guid>{guid_url}</guid>
+        </item>""")
+
+    rss_feed = f"""<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{escape(config["website"]["title"])}</title>
+    <link>{base_url}</link>
+    <atom:link href="{feed_url}" rel="self" type="application/rss+xml" />
+    <description>{escape(config["website"]["title"])} RSS feed</description>
+    {''.join(rss_items)}
+  </channel>
+</rss>"""
+
+    (output_dir / "feed.xml").write_text(rss_feed, encoding="utf-8")
 
 def sync_files(output_dir, hashes_file, cdn_config, config):
     cdn = get_cdn(cdn_config["type"], config)
@@ -178,9 +241,10 @@ if __name__ == "__main__":
 
     jwt, _ = get_session(config["bluesky"]["handle"], config["bluesky"]["app_password"])
     posts = fetch_all_posts(config["bluesky"]["handle"], jwt)
-    images = extract_images(posts, config["bluesky"]["handle"])
+    images = extract_images(posts, config["bluesky"]["handle"], output_dir, config["output"]["host_images"])
     save_images_json(images, output_dir, config["output"]["posts_per_chunk"])
     render_template(output_dir, config)
     copy_style_css(output_dir)
+    generate_rss_feed(images, output_dir, config)  
     sync_files(output_dir, hashes_file, config["cdn"], config)
 

@@ -6,13 +6,22 @@ class S3CloudFrontCDN(CDN):
         bucket = self.config["aws"]["s3_bucket"]
         dist_id = self.config["aws"]["cloudfront_dist_id"]
 
-        for rel_path in files_to_upload:
-            subprocess.run([
-                "aws", "s3", "cp",
-                str(output_dir / rel_path),
-                f"s3://{bucket}/{rel_path}",
-                "--acl", "public-read"
-            ], check=True)
+        cmd = [
+            "aws", "s3", "sync",
+            str(output_dir),
+            f"s3://{bucket}/",
+            "--acl", "public-read",
+            "--exclude", "*",
+            "--no-progress",
+            "--only-show-errors"
+        ]
+
+        for file_path in files_to_upload:
+            cmd.extend(["--include", file_path])
+
+        subprocess.run(cmd, check=True)
+
+        print(f"Uploaded {len(files_to_upload)} files to S3 bucket: {bucket}.")
 
         subprocess.run([
             "aws", "cloudfront", "create-invalidation",
@@ -21,4 +30,3 @@ class S3CloudFrontCDN(CDN):
         ], check=True)
 
         print(f"Uploaded {len(files_to_upload)} files and invalidated CloudFront ({dist_id}).")
-

@@ -18,6 +18,33 @@ Uses [LightGallery](https://github.com/sachinchoolur/lightGallery) for the UI.
 
 ---
 
+## Configuration 
+
+```bash
+bluesky:
+  handle: <Your Bluesky handle>
+  app_password: <The app password you generate, see docs>
+
+output:
+  directory: <the directory to store the locally build site>
+  posts_per_chunk: <posts per page, consider performance / load time>
+  host_images: <do you want to store the images in your cdn or refer to bluesky: true/false>
+  highres_tiles: <do you want to use the full res images in the tile grid, consider performance: true/false>
+
+cdn:
+  type: <see docs>
+
+website:
+  title: <website title> 
+  subtitle: |
+         <html under the title, links, etc. update template to customize further>
+  footer: |
+         <html under the page. update template to customize further>
+  base_url: <website this will appear on, for RSS feed>
+```
+
+---
+
 ## Live Demo
 
 Check out a live demo here:

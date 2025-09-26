@@ -5,7 +5,8 @@ bluesky:
 output:
   directory: "output_site"
   posts_per_chunk: 25
-  highres_tile: false 
+  highres_tile: false
+  host_images: false 
 
 cdn:
   type: local  # options: local, s3, s3_cloudfront, github_pages
@@ -30,3 +31,4 @@ website:
     have fun with it!
   footer: |
     (c) You <script>document.write(new Date().getFullYear())</script>
+  base_url: "https://your-website-url.com"
