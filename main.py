@@ -85,15 +85,31 @@ def fetch_all_posts(handle, jwt, limit=100, max_posts=1000):
     return all_posts[:max_posts]
 
 
-def download_image(url, save_path):
+import time
+import requests
+
+def download_image(url, save_path, retries=3, backoff=5):
     if save_path.exists():
         return
-    resp = requests.get(url, stream=True, timeout=20)
-    resp.raise_for_status()
-    save_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(save_path, 'wb') as f:
-        for chunk in resp.iter_content(8192):
-            f.write(chunk)
+
+    attempt = 0
+    while attempt <= retries:
+        try:
+            resp = requests.get(url, stream=True, timeout=20)
+            resp.raise_for_status()
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(save_path, 'wb') as f:
+                for chunk in resp.iter_content(8192):
+                    f.write(chunk)
+            return  # success, exit function
+        except (requests.RequestException, requests.Timeout) as e:
+            attempt += 1
+            if attempt > retries:
+                print(f"[WARN] Failed to download {url} after {retries} retries: {e}")
+                return  # skip, but don’t crash everything
+            wait = backoff * attempt
+            print(f"[INFO] Error fetching {url} ({e}), retrying in {wait}s...")
+            time.sleep(wait)
 
 
 def extract_images(posts, handle, output_dir, host_images=False):
