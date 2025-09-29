@@ -24,6 +24,7 @@ Uses [LightGallery](https://github.com/sachinchoolur/lightGallery) for the UI.
 bluesky:
   handle: <Your Bluesky handle>
   app_password: <The app password you generate, see docs>
+  max_posts: <Performance, general crawl size, defaults to 1000 latest posts.>
 
 output:
   directory: <the directory to store the locally build site>
