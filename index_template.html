@@ -46,17 +46,16 @@
       window.history.pushState({page}, '', '?' + params.toString());
     }
 
-    async function loadAllImages() {
-      let page = 1;
-      while (true) {
-        const response = await fetch(`data/images_page_${page}.json`);
-        if (!response.ok) break;
-        const data = await response.json();
-        images = images.concat(data);
-        page++;
-      }
-      renderPage(getPageFromURL());
-    }
+    async function loadImages() {
+  		const response = await fetch('data/images.json');
+		if (!response.ok) {
+    		console.error("Failed to load images.json");
+ 		    return;
+  		}
+  		images = await response.json();
+		renderPage(getPageFromURL());
+	}
+
 
     function renderPage(page, updateHistory = true) {
       gallery.innerHTML = '';
@@ -108,7 +107,7 @@
       renderPage(page, false);
     };
 
-    loadAllImages();
+    loadImages();
 
     document.addEventListener('keydown', (e) => {
       const activeEl = document.activeElement.tagName.toLowerCase();

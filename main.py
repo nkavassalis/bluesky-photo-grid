@@ -14,7 +14,7 @@ from xml.sax.saxutils import escape
 def validate_config(config):
     required_keys = {
         "bluesky": ["handle", "app_password"],
-        "output": ["directory", "posts_per_chunk"],
+        "output": ["directory", "posts_per_page"],
         "website": ["title", "subtitle", "footer", "base_url"],
         "cdn": ["type"]
     }
@@ -125,15 +125,13 @@ def extract_images(posts, handle, output_dir, host_images=False):
     return images
 
 
-def save_images_json(images, output_dir, chunk_size):
+def save_images_json(images, output_dir):
     json_dir = output_dir / "data"
     json_dir.mkdir(parents=True, exist_ok=True)
-    chunks = [images[i:i + chunk_size] for i in range(0, len(images), chunk_size)]
 
-    for idx, chunk in enumerate(chunks):
-        json_file = json_dir / f"images_page_{idx + 1}.json"
-        with open(json_file, "w") as f:
-            json.dump(chunk, f, indent=2)
+    json_file = json_dir / "images.json"
+    with open(json_file, "w") as f:
+        json.dump(images, f, indent=2)
 
 
 def render_template(output_dir, config):
@@ -242,7 +240,7 @@ if __name__ == "__main__":
     jwt, _ = get_session(config["bluesky"]["handle"], config["bluesky"]["app_password"])
     posts = fetch_all_posts(config["bluesky"]["handle"], jwt)
     images = extract_images(posts, config["bluesky"]["handle"], output_dir, config["output"]["host_images"])
-    save_images_json(images, output_dir, config["output"]["posts_per_chunk"])
+    save_images_json(images, output_dir)
     render_template(output_dir, config)
     copy_style_css(output_dir)
     generate_rss_feed(images, output_dir, config)  

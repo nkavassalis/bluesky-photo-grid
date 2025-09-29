@@ -33,7 +33,7 @@ bluesky:
 output:
   directory: "output_site"
   host_images: false
-  posts_per_chunk: 25
+  posts_per_page: 25
 
 cdn:
   type: local 
