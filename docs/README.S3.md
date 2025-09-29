@@ -47,7 +47,7 @@ bluesky:
 
 output:
   directory: "output_site"
-  posts_per_chunk: 25
+  posts_per_page: 25
   host_images: false
 
 cdn:

@@ -24,7 +24,6 @@
   <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.2/lightgallery.min.js"></script>
   <script>
     const useHighResTile = {{ 'true' if config.output.highres_tile else 'false' }};
-
     const gallery = document.getElementById('lightgallery');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
@@ -33,6 +32,8 @@
     let lg = null;
     let images = [];
     const pageSize = 25;
+    let currentPageImages = [];
+    let initialLoad = true;
 
     function getPageFromURL() {
       const params = new URLSearchParams(window.location.search);
@@ -43,30 +44,34 @@
     function setPageInURL(page) {
       const params = new URLSearchParams(window.location.search);
       params.set('page', page);
-      window.history.pushState({page}, '', '?' + params.toString());
+      const newUrl = location.pathname + '?' + params.toString() + location.hash;
+      window.history.pushState({page}, '', newUrl);
     }
 
-    async function loadAllImages() {
-      let page = 1;
-      while (true) {
-        const response = await fetch(`data/images_page_${page}.json`);
-        if (!response.ok) break;
-        const data = await response.json();
-        images = images.concat(data);
-        page++;
+    async function loadImages() {
+      const response = await fetch('data/images.json');
+      if (!response.ok) {
+        console.error("Failed to load images.json");
+        return;
       }
+      images = await response.json();
       renderPage(getPageFromURL());
+      if (initialLoad) {
+        initialLoad = false;
+        setTimeout(openGalleryFromAnchor, 0);
+      }
     }
 
     function renderPage(page, updateHistory = true) {
       gallery.innerHTML = '';
       const start = (page - 1) * pageSize;
       const end = start + pageSize;
-      const pageImages = images.slice(start, end);
+      currentPageImages = images.slice(start, end);
 
-      pageImages.forEach(img => {
+      currentPageImages.forEach((img, idx) => {
         const anchor = document.createElement('a');
         anchor.href = img.src;
+        anchor.dataset.index = idx;
         anchor.dataset.subHtml = `
           <div class='lg-sub-html'>
             <span class='description'>${img.description}</span><br>
@@ -80,10 +85,55 @@
       if (lg) lg.destroy();
       lg = lightGallery(gallery, { selector: 'a', download: false, counter: false });
 
+      gallery.addEventListener('lgAfterOpen', (event) => {
+        if(event.detail){
+          const idx = event.detail.index;
+          const imgId = currentPageImages[idx].id;
+          history.replaceState(null, '', location.pathname + location.search + `#img-${encodeURIComponent(imgId)}`);
+        }
+      });
+
+      gallery.addEventListener('lgAfterSlide', (event) => {
+        const idx = event.detail.index;
+        const imgId = currentPageImages[idx].id;
+        history.replaceState(null, '', location.pathname + location.search + `#img-${encodeURIComponent(imgId)}`);
+      });
+
+      gallery.addEventListener('lgAfterClose', () => {
+        history.replaceState(null, '', location.pathname + location.search);
+      });
+
       updatePagination(page);
       window.scrollTo(0, 0);
-
       if (updateHistory) setPageInURL(page);
+    }
+
+    async function openGalleryFromAnchor() {
+      const hash = window.location.hash;
+      if (hash.startsWith('#img-')) {
+        const imgId = decodeURIComponent(hash.slice(5));
+        const imgIndex = images.findIndex(img => img.id === imgId);
+        if (imgIndex !== -1) {
+          const targetPage = Math.floor(imgIndex / pageSize) + 1;
+          const indexOnPage = imgIndex % pageSize;
+          if (getPageFromURL() !== targetPage) {
+            renderPage(targetPage, false);
+          }
+          await waitForGallery();
+          lg.openGallery(indexOnPage);
+        }
+      }
+    }
+
+    function waitForGallery() {
+      return new Promise((resolve) => {
+        const checkGallery = setInterval(() => {
+          if (lg && gallery.querySelector('a')) {
+            clearInterval(checkGallery);
+            resolve();
+          }
+        }, 100);
+      });
     }
 
     function updatePagination(currentPage) {
@@ -93,36 +143,18 @@
       nextBtn.disabled = currentPage === totalPages;
     }
 
-    prevBtn.onclick = () => {
-      const page = getPageFromURL();
-      if (page > 1) renderPage(page - 1);
-    };
+    prevBtn.onclick = () => renderPage(getPageFromURL() - 1);
+    nextBtn.onclick = () => renderPage(getPageFromURL() + 1);
 
-    nextBtn.onclick = () => {
-      const page = getPageFromURL();
-      if (page < Math.ceil(images.length / pageSize)) renderPage(page + 1);
-    };
-
-    window.onpopstate = (event) => {
-      const page = event.state ? event.state.page : getPageFromURL();
-      renderPage(page, false);
-    };
-
-    loadAllImages();
+    window.onpopstate = () => renderPage(getPageFromURL(), false);
 
     document.addEventListener('keydown', (e) => {
-      const activeEl = document.activeElement.tagName.toLowerCase();
-      if (activeEl === 'input' || activeEl === 'textarea') return;
-
       if (lg && lg.lgOpened) return;
-
-      if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
-        prevBtn.click();
-      } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
-        nextBtn.click();
-      }
+      if (e.key === 'ArrowLeft' && !prevBtn.disabled) prevBtn.click();
+      else if (e.key === 'ArrowRight' && !nextBtn.disabled) nextBtn.click();
     });
 
+    loadImages();
   </script>
 
   <hr class="modern-hr">

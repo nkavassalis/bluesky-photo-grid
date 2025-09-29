@@ -14,7 +14,7 @@ from xml.sax.saxutils import escape
 def validate_config(config):
     required_keys = {
         "bluesky": ["handle", "app_password"],
-        "output": ["directory", "posts_per_chunk"],
+        "output": ["directory", "posts_per_page"],
         "website": ["title", "subtitle", "footer", "base_url"],
         "cdn": ["type"]
     }
@@ -39,7 +39,8 @@ def validate_config(config):
     if "host_images" not in config["output"]:
         config["output"]["host_images"] = False
  
-
+    if "max_posts" not in config["bluesky"]:
+        config["bluesky"]["max_posts"] = 1000
 
 def get_session(handle, password):
     url = "https://bsky.social/xrpc/com.atproto.server.createSession"
@@ -49,15 +50,19 @@ def get_session(handle, password):
     return data["accessJwt"], data["did"]
 
 
-def fetch_all_posts(handle, jwt, limit=100):
+def fetch_all_posts(handle, jwt, limit=100, max_posts=1000):
     headers = {"Authorization": f"Bearer {jwt}"}
     cursor = None
     all_posts = []
 
-    while True:
-        url = f"https://bsky.social/xrpc/app.bsky.feed.getAuthorFeed?actor={handle}&limit={limit}"
+    while len(all_posts) < max_posts:
+        remaining = max_posts - len(all_posts)
+        current_limit = min(limit, remaining, 100)  # API max is 100 per call
+
+        url = f"https://bsky.social/xrpc/app.bsky.feed.getAuthorFeed?actor={handle}&limit={current_limit}"
         if cursor:
             url += f"&cursor={quote(cursor)}"
+
         resp = requests.get(url, headers=headers, timeout=20)
         resp.raise_for_status()
         data = resp.json()
@@ -70,13 +75,15 @@ def fetch_all_posts(handle, jwt, limit=100):
             item for item in feed
             if 'reason' not in item and 'reply' not in item.get('post', {}).get('record', {})
         ]
+
         all_posts.extend(true_posts)
 
         cursor = data.get("cursor")
         if not cursor:
             break
 
-    return all_posts
+    return all_posts[:max_posts]
+
 
 def download_image(url, save_path):
     if save_path.exists():
@@ -125,15 +132,13 @@ def extract_images(posts, handle, output_dir, host_images=False):
     return images
 
 
-def save_images_json(images, output_dir, chunk_size):
+def save_images_json(images, output_dir):
     json_dir = output_dir / "data"
     json_dir.mkdir(parents=True, exist_ok=True)
-    chunks = [images[i:i + chunk_size] for i in range(0, len(images), chunk_size)]
 
-    for idx, chunk in enumerate(chunks):
-        json_file = json_dir / f"images_page_{idx + 1}.json"
-        with open(json_file, "w") as f:
-            json.dump(chunk, f, indent=2)
+    json_file = json_dir / "images.json"
+    with open(json_file, "w") as f:
+        json.dump(images, f, indent=2)
 
 
 def render_template(output_dir, config):
@@ -240,9 +245,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     jwt, _ = get_session(config["bluesky"]["handle"], config["bluesky"]["app_password"])
-    posts = fetch_all_posts(config["bluesky"]["handle"], jwt)
+    posts = fetch_all_posts(config["bluesky"]["handle"], jwt, config["bluesky"]["max_posts"])
     images = extract_images(posts, config["bluesky"]["handle"], output_dir, config["output"]["host_images"])
-    save_images_json(images, output_dir, config["output"]["posts_per_chunk"])
+    save_images_json(images, output_dir)
     render_template(output_dir, config)
     copy_style_css(output_dir)
     generate_rss_feed(images, output_dir, config)  
