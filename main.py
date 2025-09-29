@@ -39,7 +39,8 @@ def validate_config(config):
     if "host_images" not in config["output"]:
         config["output"]["host_images"] = False
  
-
+    if "max_posts" not in config["bluesky"]:
+        config["bluesky"]["max_posts"] = 1000
 
 def get_session(handle, password):
     url = "https://bsky.social/xrpc/com.atproto.server.createSession"
@@ -49,15 +50,19 @@ def get_session(handle, password):
     return data["accessJwt"], data["did"]
 
 
-def fetch_all_posts(handle, jwt, limit=100):
+def fetch_all_posts(handle, jwt, limit=100, max_posts=1000):
     headers = {"Authorization": f"Bearer {jwt}"}
     cursor = None
     all_posts = []
 
-    while True:
-        url = f"https://bsky.social/xrpc/app.bsky.feed.getAuthorFeed?actor={handle}&limit={limit}"
+    while len(all_posts) < max_posts:
+        remaining = max_posts - len(all_posts)
+        current_limit = min(limit, remaining)
+
+        url = f"https://bsky.social/xrpc/app.bsky.feed.getAuthorFeed?actor={handle}&limit={current_limit}"
         if cursor:
             url += f"&cursor={quote(cursor)}"
+
         resp = requests.get(url, headers=headers, timeout=20)
         resp.raise_for_status()
         data = resp.json()
@@ -70,13 +75,14 @@ def fetch_all_posts(handle, jwt, limit=100):
             item for item in feed
             if 'reason' not in item and 'reply' not in item.get('post', {}).get('record', {})
         ]
+
         all_posts.extend(true_posts)
 
         cursor = data.get("cursor")
         if not cursor:
             break
 
-    return all_posts
+    return all_posts[:max_posts]
 
 def download_image(url, save_path):
     if save_path.exists():
@@ -238,7 +244,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     jwt, _ = get_session(config["bluesky"]["handle"], config["bluesky"]["app_password"])
-    posts = fetch_all_posts(config["bluesky"]["handle"], jwt)
+    posts = fetch_all_posts(config["bluesky"]["handle"], jwt, config["bluesky"]["max_posts"])
     images = extract_images(posts, config["bluesky"]["handle"], output_dir, config["output"]["host_images"])
     save_images_json(images, output_dir)
     render_template(output_dir, config)

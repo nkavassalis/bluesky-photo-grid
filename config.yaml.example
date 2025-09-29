@@ -1,6 +1,7 @@
 bluesky:
   handle: "your-handle.bsky.social"
   app_password: "an app specific password, not your password"
+  max_posts: 1000
 
 output:
   directory: "output_site"
