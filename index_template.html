@@ -23,8 +23,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.2/lightgallery.min.js"></script>
   <script>
-    const useHighResTile = {{ 'true' if config.output.highres_tile else 'false' }};
-
     const gallery = document.getElementById('lightgallery');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
@@ -47,15 +45,23 @@
     }
 
     async function loadImages() {
-  		const response = await fetch('data/images.json');
-		if (!response.ok) {
-    		console.error("Failed to load images.json");
- 		    return;
-  		}
-  		images = await response.json();
-		renderPage(getPageFromURL());
-	}
-
+      const response = await fetch('data/images.json');
+      if (!response.ok) {
+        console.error("Failed to load images.json");
+        return;
+      }
+      images = await response.json();
+      const anchor = window.location.hash;
+      if (anchor) {
+        const imgIndex = images.findIndex(img => `#image-${img.id}` === anchor);
+        if (imgIndex >= 0) {
+          const page = Math.floor(imgIndex / pageSize) + 1;
+          renderPage(page);
+          return;
+        }
+      }
+      renderPage(getPageFromURL());
+    }
 
     function renderPage(page, updateHistory = true) {
       gallery.innerHTML = '';
@@ -66,23 +72,41 @@
       pageImages.forEach(img => {
         const anchor = document.createElement('a');
         anchor.href = img.src;
+        anchor.id = `image-${img.id}`;
         anchor.dataset.subHtml = `
           <div class='lg-sub-html'>
             <span class='description'>${img.description}</span><br>
             <span class='post-info'>Posted on ${img.date}
             <a href='${img.link}' target='_blank'>View it on Bluesky</a></span>
           </div>`;
-        anchor.innerHTML = `<img src="${useHighResTile ? img.src : img.thumb}" loading="lazy">`;
+        anchor.innerHTML = `<img src="${img.src}" loading="lazy">`;
         gallery.appendChild(anchor);
       });
 
       if (lg) lg.destroy();
       lg = lightGallery(gallery, { selector: 'a', download: false, counter: false });
 
+      lg.on('lgAfterOpen', (e) => {
+        const currentItem = lg.getSlideItem(e.index);
+        const imgAnchor = currentItem.el;
+        history.replaceState(null, '', `?page=${getPageFromURL()}#${imgAnchor.id}`);
+      });
+
       updatePagination(page);
       window.scrollTo(0, 0);
 
       if (updateHistory) setPageInURL(page);
+
+      setTimeout(() => {
+        const anchor = window.location.hash;
+        if (anchor) {
+          const el = document.querySelector(anchor);
+          if (el) {
+            const index = [...gallery.querySelectorAll('a')].indexOf(el);
+            if (index >= 0) lg.openGallery(index);
+          }
+        }
+      }, 200);
     }
 
     function updatePagination(currentPage) {
@@ -92,36 +116,12 @@
       nextBtn.disabled = currentPage === totalPages;
     }
 
-    prevBtn.onclick = () => {
-      const page = getPageFromURL();
-      if (page > 1) renderPage(page - 1);
-    };
+    prevBtn.onclick = () => renderPage(getPageFromURL() - 1);
+    nextBtn.onclick = () => renderPage(getPageFromURL() + 1);
 
-    nextBtn.onclick = () => {
-      const page = getPageFromURL();
-      if (page < Math.ceil(images.length / pageSize)) renderPage(page + 1);
-    };
-
-    window.onpopstate = (event) => {
-      const page = event.state ? event.state.page : getPageFromURL();
-      renderPage(page, false);
-    };
+    window.onpopstate = () => renderPage(getPageFromURL(), false);
 
     loadImages();
-
-    document.addEventListener('keydown', (e) => {
-      const activeEl = document.activeElement.tagName.toLowerCase();
-      if (activeEl === 'input' || activeEl === 'textarea') return;
-
-      if (lg && lg.lgOpened) return;
-
-      if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
-        prevBtn.click();
-      } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
-        nextBtn.click();
-      }
-    });
-
   </script>
 
   <hr class="modern-hr">
