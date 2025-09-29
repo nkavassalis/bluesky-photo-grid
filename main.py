@@ -57,7 +57,7 @@ def fetch_all_posts(handle, jwt, limit=100, max_posts=1000):
 
     while len(all_posts) < max_posts:
         remaining = max_posts - len(all_posts)
-        current_limit = min(limit, remaining)
+        current_limit = min(limit, remaining, 100)  # API max is 100 per call
 
         url = f"https://bsky.social/xrpc/app.bsky.feed.getAuthorFeed?actor={handle}&limit={current_limit}"
         if cursor:
@@ -83,6 +83,7 @@ def fetch_all_posts(handle, jwt, limit=100, max_posts=1000):
             break
 
     return all_posts[:max_posts]
+
 
 def download_image(url, save_path):
     if save_path.exists():
