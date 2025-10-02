@@ -204,10 +204,10 @@ def generate_rss_feed(images, output_dir, config, feed_size=25):
         rss_items.append(f"""
         <item>
             <title>{description_text[:50]}</title>
-            <link>{guid_url}</link>
+            <link>{base_url}/img-{{img['rkey']}</link>
             <description>{description_text}</description>
             <pubDate>{datetime.datetime.strptime(img['date'], '%Y-%m-%d').strftime('%a, %d %b %Y 00:00:00 GMT')}</pubDate>
-            <guid>{guid_url}</guid>
+            <guid>{img['rkey']}</guid>
         </item>""")
 
     rss_feed = f"""<?xml version="1.0" encoding="UTF-8" ?>
