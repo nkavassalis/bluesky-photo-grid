@@ -198,7 +198,6 @@ def generate_rss_feed(images, output_dir, config, feed_size=25):
     feed_url = f"{base_url}/feed.xml"
 
     for img in feed_images:
-        guid_url = img['link']
         description_text = escape(img['description'])
 
         rss_items.append(f"""
