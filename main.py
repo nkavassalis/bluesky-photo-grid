@@ -42,6 +42,13 @@ def validate_config(config):
     if "max_posts" not in config["bluesky"]:
         config["bluesky"]["max_posts"] = 1000
 
+    if "hashtag" not in config["bluesky"]:
+        config["bluesky"]["hashtag"] = "#photography"
+
+    if "show_nsfw" not in config["bluesky"]:
+        config["bluesky"]["show_nsfw"] = False
+
+
 def get_session(handle, password):
     url = "https://bsky.social/xrpc/com.atproto.server.createSession"
     resp = requests.post(url, json={"identifier": handle, "password": password})
@@ -88,13 +95,16 @@ def fetch_all_posts(handle, jwt, limit=100, max_posts=1000):
 import time
 import requests
 
-def post_has_moderation_label(post):
+def post_has_moderation_label(post, show_nsfw=False):
+    if show_nsfw:
+        return False
     labels = post.get("labels", [])
     blocked_values = {"porn", "sexual", "nudity", "graphic-media", "spam", "!hide", "!warn"}
     return any(label.get("val") in blocked_values for label in labels)
 
-def has_photography_hashtag(text):
-    return "#photography" in text.lower()
+def has_target_hashtag(text, hashtag="#photography"):
+    return hashtag.lower() in text.lower()
+
 
 def download_image(url, save_path, retries=3, backoff=5):
     if save_path.exists():
@@ -124,12 +134,12 @@ def extract_images(posts, handle, output_dir, host_images=False):
     images = []
     for item in posts:
         post = item.get("post", {})
-        if post_has_moderation_label(post):
-            continue  # Skip moderated posts
+        if post_has_moderation_label(post, show_nsfw=show_nsfw):
+            continue  # Skip moderated posts if NSFW is hidden
 
         description = post.get("record", {}).get("text", "")
-        if not has_photography_hashtag(description):
-            continue  # Skip posts without #photography
+        if not has_target_hashtag(description, hashtag):
+            continue  # Skip posts without desired hashtag
 
         uri = post.get("uri")
         embed = post.get("embed", {})
