@@ -130,7 +130,7 @@ def download_image(url, save_path, retries=3, backoff=5):
             time.sleep(wait)
 
 
-def extract_images(posts, handle, output_dir, host_images=False):
+def extract_images(posts, handle, output_dir, host_images=False, hashtag="#photography", show_nsfw=False):
     images = []
     for item in posts:
         post = item.get("post", {})
@@ -285,7 +285,14 @@ if __name__ == "__main__":
 
     jwt, _ = get_session(config["bluesky"]["handle"], config["bluesky"]["app_password"])
     posts = fetch_all_posts(config["bluesky"]["handle"], jwt, config["bluesky"]["max_posts"])
-    images = extract_images(posts, config["bluesky"]["handle"], output_dir, config["output"]["host_images"])
+    images = extract_images(
+        posts,
+        config["bluesky"]["handle"],
+        output_dir,
+        host_images=config["output"]["host_images"],
+        hashtag=config["bluesky"]["hashtag"],
+        show_nsfw=config["bluesky"]["show_nsfw"]
+    )
     save_images_json(images, output_dir)
     render_template(output_dir, config)
     copy_style_css(output_dir)
