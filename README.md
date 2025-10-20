@@ -62,12 +62,10 @@ Contributions are welcome! Feel free to open an issue or submit a pull request. 
 
 ---
 
----
-
 ## Contributors
 
-@nkavassalis
-@johnchedsey
+- [@nkavassalis](https://github.com/nkavassalis)
+- [@johnchedsey](https://github.com/johnchedsey)
 
 ---
 
