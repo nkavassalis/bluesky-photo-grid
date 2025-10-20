@@ -88,6 +88,14 @@ def fetch_all_posts(handle, jwt, limit=100, max_posts=1000):
 import time
 import requests
 
+def post_has_moderation_label(post):
+    labels = post.get("labels", [])
+    blocked_values = {"porn", "sexual", "nudity", "graphic-media", "spam", "!hide", "!warn"}
+    return any(label.get("val") in blocked_values for label in labels)
+
+def has_photography_hashtag(text):
+    return "#photography" in text.lower()
+
 def download_image(url, save_path, retries=3, backoff=5):
     if save_path.exists():
         return
@@ -116,14 +124,21 @@ def extract_images(posts, handle, output_dir, host_images=False):
     images = []
     for item in posts:
         post = item.get("post", {})
+        if post_has_moderation_label(post):
+            continue  # Skip moderated posts
+
+        description = post.get("record", {}).get("text", "")
+        if not has_photography_hashtag(description):
+            continue  # Skip posts without #photography
+
         uri = post.get("uri")
         embed = post.get("embed", {})
-        description = post.get("record", {}).get("text", "")
         created_at = post.get("record", {}).get("createdAt", "")[:10]
+
         if "images" in embed:
             for img in embed["images"]:
                 src = img.get("fullsize")
-                thumb = img.get("thumb") 
+                thumb = img.get("thumb")
                 if src and uri:
                     rkey = uri.split("/")[-1]
                     link = f"https://bsky.app/profile/{handle}/post/{rkey}"
@@ -138,15 +153,14 @@ def extract_images(posts, handle, output_dir, host_images=False):
                         thumb = str(thumb_filename.relative_to(output_dir))
 
                     images.append({
-                        "id": rkey, 
-                        "src": src, 
-                        "thumb": thumb, 
-                        "link": link, 
-                        "description": description, 
+                        "id": rkey,
+                        "src": src,
+                        "thumb": thumb,
+                        "link": link,
+                        "description": description,
                         "date": created_at
                     })
     return images
-
 
 def save_images_json(images, output_dir):
     json_dir = output_dir / "data"
