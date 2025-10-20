@@ -25,6 +25,8 @@ bluesky:
   handle: <Your Bluesky handle>
   app_password: <The app password you generate, see docs>
   max_posts: <Performance, general crawl size, defaults to 1000 latest posts.>
+  hashtag: <The hashtag you want to display posts from, defaults to #photography>
+  show_nsfw: <Hide or show NSFW / moderated content, defaults to false
 
 output:
   directory: <the directory to store the locally build site>
@@ -60,8 +62,16 @@ Contributions are welcome! Feel free to open an issue or submit a pull request. 
 
 ---
 
-## LICENSE
+---
 
+## Contributors
+
+@nkavassalis
+@johnchedsey
+
+---
+
+## License
 GPL v3, see included LICENSE file
 
 ---
