@@ -52,7 +52,11 @@ website:
 
 Example photo stream (mobile view)
 
-![Example Bluesky Grid](example.png)
+![Example Bluesky Grid - Mobile](example.png)
+
+Example photo stream (desktop view)
+
+![Example Bluesky Grid - Desktop](example-desktop.png)
 
 Check out a live demo here:
 
