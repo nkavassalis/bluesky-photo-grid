@@ -52,7 +52,7 @@ website:
 
 Example photo stream
 
-![Example Bluesky Grid](example.png)
+![Example Bluesky Grid](example.jpg)
 
 Check out a live demo here:
 
