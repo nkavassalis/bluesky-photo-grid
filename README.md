@@ -48,15 +48,9 @@ website:
 
 ---
 
-## Demo
+## Examples
 
-Example photo stream (mobile view)
-
-![Example Bluesky Grid - Mobile](example.png)
-
-Example photo stream (desktop view)
-
-![Example Bluesky Grid - Desktop](example-desktop.png)
+[Screenshots of desktop and mobile versions](docs/example.md)
 
 Check out a live demo here:
 
