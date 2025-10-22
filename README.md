@@ -50,7 +50,7 @@ website:
 
 ## Demo
 
-Example photo stream
+Example photo stream (mobile view)
 
 ![Example Bluesky Grid](example.jpg)
 
