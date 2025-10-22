@@ -48,7 +48,11 @@ website:
 
 ---
 
-## Live Demo
+## Demo
+
+Example photo stream
+
+![Example Bluesky Grid][example.png]
 
 Check out a live demo here:
 
